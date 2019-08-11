@@ -1,3 +1,6 @@
+import math
+
+
 def negate(p):
     return -p[0], -p[1]
 
@@ -35,3 +38,7 @@ def strip_vertical_line(line, strip_width):
         return add_points(start, negate(strip)), add_points(end, strip)
     else:
         return add_points(start, strip), add_points(end, negate(strip))
+
+
+def rad_to_deg(rad):
+    return 180 * rad / math.pi
