@@ -1,12 +1,26 @@
 import math
 
+cos = math.cos
+sin = math.sin
+
 
 def negate(p):
     return -p[0], -p[1]
 
 
+def distance(p1, p2):
+    a, b = p1
+    c, d = p2
+    return ((c - a) ** 2 + (d - b) ** 2) ** 0.5
+
+
 def add_points(p1, p2):
     return p1[0] + p2[0], p1[1] + p2[1]
+
+
+def rotate_point(p, angle):
+    x, y = p
+    return x * cos(angle) - y * sin(angle), y * cos(angle) + x * sin(angle)
 
 
 def scale_point(p, f):

@@ -36,12 +36,15 @@ def main():
     text = shapes.Text('bibek', (50, 50), font)
     arc = shapes.Arc((300, 20), 50, 0, -3.14/3)
 
+    arrow = shapes.Arrow((400, 400), (450, 150))
+
     textrect = shapes.TextInRectangle('Pandey', font, (100, 100), padding=20)
     roundedrect = shapes.RoundedRectangle((150, 150), (300, 340), 10)
 
     render(img, rectangle)
     render(img, text)
     render(img, arc)
+    render(img, arrow)
     render(img, textrect)
     render(img, roundedrect)
 

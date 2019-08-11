@@ -1,8 +1,8 @@
 import math
 
-from PIL import ImageDraw, ImageFont, Image
+from PIL import ImageFont
 
-from utils import add_points, scale_point, negate
+from utils import add_points, scale_point, negate, rotate_point, distance
 
 
 class Line:
@@ -26,6 +26,40 @@ class Arc:
         self.radius = radius
         self.fill = None,
         self.border = None
+
+
+class Arrow:
+    type = 'arrow'
+
+    def __init__(self, start, end):
+        self.start = start
+        self.end = end
+
+    @property
+    def primitives(self):
+        if hasattr(self, '_primitives'):
+            return self._primitives
+
+        arrow_head_length = 7
+        line_dist = distance(self.start, self.end)
+        factor = arrow_head_length / line_dist
+        # Calculate arrow head lines:
+        # - Take a line from end to start, rotate it 30 deg, and clip it
+        # - Take a line from end to start, rotate it -30 deg, and clip it
+        origin_shifted = add_points(self.start, negate(self.end))
+        pos_rotated = rotate_point(origin_shifted, math.pi / 6)
+        neg_rotated = rotate_point(origin_shifted, -math.pi / 6)
+
+        p1 = pos_rotated[0] * factor, pos_rotated[1] * factor
+        p2 = neg_rotated[0] * factor, neg_rotated[1] * factor
+        head1 = add_points(self.end, p1)
+        head2 = add_points(self.end, p2)
+
+        return [
+            Line(self.start, self.end),  # the main line
+            Line(self.end, head1),
+            Line(self.end, head2),
+        ]
 
 
 class Rectangle:
@@ -158,38 +192,3 @@ class TextInRectangle:
 class TextInRoundedRectangle(TextInRectangle):
     def __init__(self, text, font, center, padding=0, radius=5, wrap=None):
         pass
-
-
-def get_text_position(rect_top_left, rect_bottom_right, text_size):
-    x1, y1 = rect_top_left
-    x2, y2 = rect_bottom_right
-    w, h = text_size
-    return (x2 - x1 - w) / 2, (y2 - y1 - h) / 2
-
-
-def draw_text_inside_rectangle(text, padding=20):
-    image_size = (500, 500)
-    img = Image.new('RGB', image_size)
-    draw = ImageDraw.Draw(img)
-
-    font = ImageFont.truetype('Ubuntu-R')
-    text_size = font.getsize(text)
-    rect_size = tuple(x+padding for x in text_size)
-
-    rect_top_left = (0, 0)
-    rect_bottom_right = add_points(rect_top_left, rect_size)
-
-    text_pos = get_text_position(rect_top_left, rect_bottom_right, text_size)
-
-    draw.rectangle((rect_top_left, rect_bottom_right))
-    draw.text(
-        text_pos,
-        text,
-        font=font
-    )
-
-    img.save('text.png')
-
-
-if __name__ == '__main__':
-    draw_text_inside_rectangle('bibek')
