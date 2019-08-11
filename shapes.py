@@ -14,6 +14,10 @@ class Line:
         self.fill = fill
         self.width = width
 
+    @property
+    def center(self):
+        return scale_point(add_points(self.start, self.end), 0.5)
+
 
 class Arc:
     type = 'arc'
@@ -28,47 +32,16 @@ class Arc:
         self.border = None
 
 
-class ParalleloGram:
-    type = 'parallelogram'
-
-    def __init__(self, bound_top_left, bound_bottom_right, slide=0, fill=None):
-        self.bound_top_left = bound_top_left
-        self.bound_bottom_right = bound_bottom_right
-        self.slide = slide
-        self.fill = fill
-
-    @property
-    def primitives(self):
-        if hasattr(self, '_primitives'):
-            return self._primitives
-
-        # calculate primitives
-        x1, y1 = self.bound_top_left
-        x2, y2 = self.bound_bottom_right
-        # TODO: return a polygon instead of lines
-        if self.slide < 0:  # slide is towards left
-            # bound top_left and bound bottom_right remain the same
-            return [
-                Line((x1, y1), (x2 + self.slide, y1)),  # Top
-                Line((x1 - self.slide, y2), (x2, y2)),  # Bottom
-                Line((x1, y1), (x1 - self.slide, y2)),  # Left
-                Line((x2 + self.slide, y1), (x2, y2)),  # Right
-            ]
-        else:  # slide is towards right
-            return [
-                Line((x1 + self.slide, y1), (x2, y1)),  # Top
-                Line((x1, y2), (x2 - self.slide, y2)),  # Bottom
-                Line((x1 + self.slide, y1), (x1, y2)),  # Left
-                Line((x2, y1), (x2-self.slide, y2)),  # Right
-            ]
-
-
 class Arrow:
     type = 'arrow'
 
     def __init__(self, start, end):
         self.start = start
         self.end = end
+
+    @property
+    def center(self):
+        return scale_point(add_points(self.start, self.end), 0.5)
 
     @property
     def primitives(self):
@@ -106,6 +79,52 @@ class Rectangle:
         self.fill = None
         self.border_width, self.border_color = border
 
+    @property
+    def center(self):
+        return scale_point(add_points(self.top_left, self.bottom_right), 0.5)
+
+
+class ParalleloGram:
+    type = 'parallelogram'
+
+    def __init__(self, bound_top_left, bound_bottom_right, slide=0, fill=None):
+        self.bound_top_left = bound_top_left
+        self.bound_bottom_right = bound_bottom_right
+        self.slide = slide
+        self.fill = fill
+
+    @property
+    def center(self):
+        return scale_point(
+            add_points(self.bound_top_left, self.bound_bottom_right),
+            0.5
+        )
+
+    @property
+    def primitives(self):
+        if hasattr(self, '_primitives'):
+            return self._primitives
+
+        # calculate primitives
+        x1, y1 = self.bound_top_left
+        x2, y2 = self.bound_bottom_right
+        # TODO: return a polygon instead of lines
+        if self.slide < 0:  # slide is towards left
+            # bound top_left and bound bottom_right remain the same
+            return [
+                Line((x1, y1), (x2 + self.slide, y1)),  # Top
+                Line((x1 - self.slide, y2), (x2, y2)),  # Bottom
+                Line((x1, y1), (x1 - self.slide, y2)),  # Left
+                Line((x2 + self.slide, y1), (x2, y2)),  # Right
+            ]
+        else:  # slide is towards right
+            return [
+                Line((x1 + self.slide, y1), (x2, y1)),  # Top
+                Line((x1, y2), (x2 - self.slide, y2)),  # Bottom
+                Line((x1 + self.slide, y1), (x1, y2)),  # Left
+                Line((x2, y1), (x2-self.slide, y2)),  # Right
+            ]
+
 
 class Text:
     type = 'text'
@@ -115,6 +134,7 @@ class Text:
         self.position = position
         self.color = color
         self.font = font  # STRING
+        self.center = None  # TODO: calculate this
 
 
 class RoundedRectangle:
@@ -129,6 +149,10 @@ class RoundedRectangle:
 
         self.width = self.bottom_right[0] - self.top_left[0]
         self.height = self.bottom_right[1] - self.top_left[1]
+
+    @property
+    def center(self):
+        return scale_point(add_points(self.top_left, self.bottom_right), 0.5)
 
     @property
     def primitives(self):
@@ -150,6 +174,8 @@ class RoundedRectangle:
         x1, y1 = self.top_left
         x2, y2 = self.bottom_right
         r = self.radius
+
+        # TODO: check for case of circle or ellipse
 
         lines = [
             # Horizontal lines
@@ -282,4 +308,3 @@ class TextInParallelogram:
             ParalleloGram(rect_top_left, rect_bottom_right, self.slide)
         ]
         return self._primitives
-

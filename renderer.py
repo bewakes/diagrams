@@ -27,7 +27,7 @@ def render(img, obj):
         [render(img, x) for x in obj.primitives]
 
 
-def main():
+def render_shapes():
     font = 'Ubuntu-R'
     image_size = (500, 500)
     img = Image.new('RGB', image_size)
@@ -39,7 +39,7 @@ def main():
     arrow = shapes.Arrow((400, 400), (450, 150))
 
     textrect = shapes.TextInRectangle('Pandey', font, (100, 100), padding=20)
-    textrrect = shapes.TextInRoundedRectangle('round', font, (200, 380), radius=10, padding=20)
+    textrrect = shapes.TextInRoundedRectangle('round', font, (200, 380), radius=20, padding=20)
     roundedrect = shapes.RoundedRectangle((150, 150), (300, 340), 10)
 
     parallelogram = shapes.ParalleloGram((40, 40), (100, 100), slide=-10)
@@ -58,5 +58,21 @@ def main():
     img.save('text.png')
 
 
+def render_blocks_and_arrows():
+    font = 'Ubuntu-R'
+    image_size = (500, 500)
+    img = Image.new('RGB', image_size)
+
+    par_text = shapes.TextInParallelogram('Side Project', font, (100, 100), 15, padding=10)
+    rect_text = shapes.TextInRectangle('Is Fun', font, (300, 100), padding=10)
+    round_text = shapes.TextInRoundedRectangle('Life', font, (450, 200), 7)
+
+    arrow1 = shapes.Arrow(par_text.center, rect_text.center)
+    arrow2 = shapes.Arrow(round_text.center, rect_text.center)
+
+    [render(img, x) for x in [par_text, rect_text, round_text, arrow1, arrow2]]
+    img.save('text.png')
+
+
 if __name__ == '__main__':
-    main()
+    render_blocks_and_arrows()
