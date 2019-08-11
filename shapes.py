@@ -112,6 +112,7 @@ class RoundedRectangle:
     def _get_wired_primitives(self):
         """The wired primitives consists of 4 90degree arcs at four corners,
         and four lines"""
+        print(' in get wored ')
         x1, y1 = self.top_left
         x2, y2 = self.bottom_right
         r = self.radius
@@ -191,4 +192,22 @@ class TextInRectangle:
 
 class TextInRoundedRectangle(TextInRectangle):
     def __init__(self, text, font, center, padding=0, radius=5, wrap=None):
-        pass
+        self.text = text
+        self.center = center
+        self.radius = radius
+        self.font = font
+        self.padding = padding  # padding with rect
+        self.wrap = None if wrap == 0 else wrap  # width of the wrap
+
+    @property
+    def primitives(self):
+        if hasattr(self, '_primitives'):
+            return self._primitives
+
+        # Get primitives from suepr and modify rectangle to rounded rect
+        self._primitives = [
+            x if x.type != 'rectangle' else RoundedRectangle(
+                x.top_left, x.bottom_right, self.radius)
+            for x in super().primitives
+        ]
+        return self._primitives

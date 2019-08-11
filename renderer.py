@@ -39,6 +39,7 @@ def main():
     arrow = shapes.Arrow((400, 400), (450, 150))
 
     textrect = shapes.TextInRectangle('Pandey', font, (100, 100), padding=20)
+    textrrect = shapes.TextInRoundedRectangle('round', font, (200, 380), radius=10, padding=20)
     roundedrect = shapes.RoundedRectangle((150, 150), (300, 340), 10)
 
     render(img, rectangle)
@@ -46,6 +47,7 @@ def main():
     render(img, arc)
     render(img, arrow)
     render(img, textrect)
+    render(img, textrrect)
     render(img, roundedrect)
 
     img.save('text.png')
