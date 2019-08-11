@@ -43,6 +43,7 @@ def main():
     roundedrect = shapes.RoundedRectangle((150, 150), (300, 340), 10)
 
     parallelogram = shapes.ParalleloGram((40, 40), (100, 100), slide=-10)
+    textinparall = shapes.TextInParallelogram('textpara', font, (300, 400), -15, padding=10)
 
     render(img, rectangle)
     render(img, text)
@@ -52,6 +53,7 @@ def main():
     render(img, textrrect)
     render(img, roundedrect)
     render(img, parallelogram)
+    render(img, textinparall)
 
     img.save('text.png')
 

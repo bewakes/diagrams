@@ -245,3 +245,41 @@ class TextInRoundedRectangle(TextInRectangle):
             for x in super().primitives
         ]
         return self._primitives
+
+
+class TextInParallelogram:
+    type = 'text_in_parallelogram'
+
+    def __init__(self, text, font, center, slide=0, padding=0, wrap=None):
+        self.text = text
+        self.center = center
+        self.font = font
+        self.slide = slide
+        self.padding = padding
+        self.wrap = None if wrap == 0 else wrap
+
+    @property
+    def primitives(self):
+        if hasattr(self, '_primitives'):
+            return self._primitives
+        # No wrap, simple Logic
+
+        # Calculate text size
+        font = ImageFont.truetype(self.font)
+        text_size = font.getsize(self.text)  # equivalent to text's top left at origin  # noqa
+        half_text_size = scale_point(text_size, 0.5)
+        text_position = add_points(self.center, negate(half_text_size))
+
+        padding = self.padding
+        left = text_position[0] - padding - abs(self.slide)
+        right = text_position[0] + text_size[0] + padding + abs(self.slide)
+
+        rect_top_left = (left, text_position[1] - padding)
+        rect_bottom_right = (right, text_position[1] + text_size[1] + padding)
+
+        self._primitives = [
+            Text(self.text, text_position, self.font),
+            ParalleloGram(rect_top_left, rect_bottom_right, self.slide)
+        ]
+        return self._primitives
+
