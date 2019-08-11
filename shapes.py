@@ -28,6 +28,41 @@ class Arc:
         self.border = None
 
 
+class ParalleloGram:
+    type = 'parallelogram'
+
+    def __init__(self, bound_top_left, bound_bottom_right, slide=0, fill=None):
+        self.bound_top_left = bound_top_left
+        self.bound_bottom_right = bound_bottom_right
+        self.slide = slide
+        self.fill = fill
+
+    @property
+    def primitives(self):
+        if hasattr(self, '_primitives'):
+            return self._primitives
+
+        # calculate primitives
+        x1, y1 = self.bound_top_left
+        x2, y2 = self.bound_bottom_right
+        # TODO: return a polygon instead of lines
+        if self.slide < 0:  # slide is towards left
+            # bound top_left and bound bottom_right remain the same
+            return [
+                Line((x1, y1), (x2 + self.slide, y1)),  # Top
+                Line((x1 - self.slide, y2), (x2, y2)),  # Bottom
+                Line((x1, y1), (x1 - self.slide, y2)),  # Left
+                Line((x2 + self.slide, y1), (x2, y2)),  # Right
+            ]
+        else:  # slide is towards right
+            return [
+                Line((x1 + self.slide, y1), (x2, y1)),  # Top
+                Line((x1, y2), (x2 - self.slide, y2)),  # Bottom
+                Line((x1 + self.slide, y1), (x1, y2)),  # Left
+                Line((x2, y1), (x2-self.slide, y2)),  # Right
+            ]
+
+
 class Arrow:
     type = 'arrow'
 
@@ -112,7 +147,6 @@ class RoundedRectangle:
     def _get_wired_primitives(self):
         """The wired primitives consists of 4 90degree arcs at four corners,
         and four lines"""
-        print(' in get wored ')
         x1, y1 = self.top_left
         x2, y2 = self.bottom_right
         r = self.radius
