@@ -44,7 +44,7 @@ def strip_empty(line, index=0):
     if index >= length:
         return index
 
-    while line[index] == ' ' or '\t':
+    while line[index] == ' ' or line[index] == '\t':
         index += 1
         if index >= len(line):
             break
@@ -79,7 +79,7 @@ def parse_string_val(line, index=0):
     line = strip_comment(line)
     pos = strip_empty(line, index)
 
-    match = re.match(line[pos:], '^"(.*)"')
+    match = re.match('^"(.*)"', line[pos:])
     if not match:
         return None, pos, "Invalid string"
     val = match.group(1)
@@ -97,7 +97,7 @@ def parse_declaration(line, index=0):
     if start_char not in BRACES_ENDS:
         return (None, pos, 'Invalid declaration token')
 
-    (parsed, pos, _) = parse_alpha(line, pos)
+    (parsed, pos, _) = parse_alpha(line, pos+1)
     pos = strip_empty(line, pos)
 
     if pos >= length or not parsed:
@@ -108,8 +108,8 @@ def parse_declaration(line, index=0):
     if line[pos] != BRACES_ENDS[start_char]:
         return (None, pos, 'Invalid/Missing closure for variable declaration')
 
-    pos = strip_empty(line, pos)
-    if not line or not line[pos:pos+2] != ':=':
+    pos = strip_empty(line, pos+1)
+    if not line or line[pos:pos+2] != ':=':
         return (None, pos, 'Variable declaration missing `:=`')
 
     pos += 2
@@ -125,18 +125,51 @@ def parse_declaration(line, index=0):
     return (variable_name, string_value, start_char), pos, ''
 
 
+LINKS_LIST = ['->', '<-', '|>', '<|']
+
+
 def parse_chain(line, index=0):
-    vars_links = {}
-    values_links = {}
+    vars = []
+    links = []
 
     parse_var = True
     pos = index
-    while True:
+    curr_val = {}
+
+    line = strip_comment(line)
+    length = len(line)
+    while index < length:
         if parse_var:
-            str_val, pos, _ = parse_string_val(line, index)
+            str_val, pos, er = parse_string_val(line, index)
             if str_val is not None:
-                # TODO: start here
-                pass
+                curr_val['value'] = str_val
+                curr_val['type'] = 'string'
+                index = pos
+                parse_var = False
+            if parse_var:
+                var_val, pos, _ = parse_alpha(line, index)
+                if var_val is not None:
+                    curr_val['value'] = var_val
+                    curr_val['type'] = 'variable'
+                    index = pos
+                    parse_var = False
+            if parse_var:
+                return None, index, "Expected a string or variable"
+            vars.append({**curr_val})
+        else:
+            pos = strip_empty(line, index)
+            if pos >= len(line):
+                break
+            if line[pos:pos+2] not in LINKS_LIST:
+                return None, pos, "Expected one of " + ', '.join(LINKS_LIST)
+
+            links.append(line[pos:pos+2])
+            index = pos + 2
+            parse_var = True
+    # It should not be expecting to parse a variable as chain ends on variable, not link
+    if parse_var:
+        return None, index, "Dangling link."
+    return (vars, links), index, ''
 
 
 def parse(input):
@@ -145,4 +178,22 @@ def parse(input):
 
     lines = input.split('\n')
     for line_num, line in enumerate(lines):
-        pass
+        line = line.strip()
+        if not line or line[0] == '#':
+            continue
+        declaration, dec_position, dec_err = parse_declaration(line, 0)
+        if declaration is None:
+            chain, chain_position, chain_err = parse_chain(line, 0)
+            if chain is None:
+                err = dec_err if dec_position > chain_position else chain_err
+                err_col = max(dec_position, chain_position)
+                print(f'SYNTAX_ERROR<Line {line_num+1}, Col {err_col+1}>: {err}')
+            else:
+                print('CHAIN', chain)
+        else:
+            print('DECLARATION', declaration)
+
+
+if __name__ == '__main__':
+    with open('diagram.dsl') as f:
+        parse(f.read())
