@@ -1,5 +1,6 @@
 import string
 import re
+from utils import string_hash
 """
 The DSL is parsed line by line. There are no multi line statements. So, the
 parsing will be easy
@@ -86,6 +87,30 @@ def parse_string_val(line, index=0):
     return val, pos + len(val) + 2, ''
 
 
+def parse_string_val_enclosed(line, index=0):
+    line = strip_comment(line)
+    length = len(line)
+    pos = strip_empty(line, index)
+
+    if pos > length:
+        return None, pos, ""
+
+    # Check if enclosing char present
+    if line[pos] in BRACES_ENDS:
+        brace = line[pos]
+    else:
+        return None, pos, "Invalid node: string should be enclosed"
+
+    val, pos, _ = parse_string_val(line, pos + 1)
+    if val is None:
+        return None, pos, "Invalid string"
+
+    pos = strip_empty(line, pos)
+    if pos > length or line[pos] != BRACES_ENDS[brace]:
+        return None, pos, "Invalid enclosure"
+    return (val, brace), pos + 1, ""
+
+
 def parse_declaration(line, index=0):
     line = strip_comment(line)
     length = len(line)
@@ -140,22 +165,25 @@ def parse_chain(line, index=0):
     length = len(line)
     while index < length:
         if parse_var:
-            str_val, pos, er = parse_string_val(line, index)
+            str_val, pos, er = parse_string_val_enclosed(line, index)
             if str_val is not None:
-                curr_val['value'] = str_val
+                val, enclosure = str_val
+                curr_val['value'] = val
                 curr_val['type'] = 'string'
+                curr_val['enclosure'] = enclosure
                 index = pos
                 parse_var = False
-            if parse_var:
-                var_val, pos, _ = parse_alpha(line, index)
-                if var_val is not None:
+            else:
+                var_val, pos, er = parse_alpha(line, index)
+                if var_val:
                     curr_val['value'] = var_val
                     curr_val['type'] = 'variable'
                     index = pos
                     parse_var = False
-            if parse_var:
-                return None, index, "Expected a string or variable"
+                else:
+                    return None, index, "Expected a string or variable"
             vars.append({**curr_val})
+            curr_val = {}
         else:
             pos = strip_empty(line, index)
             if pos >= len(line):
@@ -175,6 +203,8 @@ def parse_chain(line, index=0):
 def parse(input):
     """Takes in a string input and returns a graph like result"""
     var_definitions_map = {}
+    links = {
+    }
 
     lines = input.split('\n')
     for line_num, line in enumerate(lines):
@@ -190,8 +220,40 @@ def parse(input):
                 print(f'SYNTAX_ERROR<Line {line_num+1}, Col {err_col+1}>: {err}')
             else:
                 print('CHAIN', chain)
+                nodes, link_types = chain
+
+                node_vars = []
+                for i, node in enumerate(nodes):
+                    type = node['type']
+                    var = node['value']
+                    if type == 'string':
+                        # Create a variable
+                        var = str(string_hash(node['value'] + (node['enclosure'] or '')))
+                        var_definitions_map[var] = {
+                            'value': node['value']
+                        }
+                    info = links.get(var, {})
+
+                    # TODO: think about links
+                    info['links'] = {
+                        **info.get('links', {}),
+                        #var: linkn_types
+                    }
+                    links[node['value']] = info
         else:
-            print('DECLARATION', declaration)
+            name, val, start = declaration
+            var_definitions_map[name] = {
+                'value': val,
+                'type': start,
+            }
+            present = var_definitions_map.get(name)
+            # TODO: fix this
+            # if present is not None:
+            #    print(f"ERROR<Line {line_num + 1}>: variable '{name}' already defined")
+            var_definitions_map[name] = {
+                'value': val,
+                'start': start,
+            }
 
 
 if __name__ == '__main__':

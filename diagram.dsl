@@ -9,10 +9,13 @@
 
 # Horizontal layout
 a -> b -> c
-"new state" -> b  # This affects the layout since it introduces branch
+["next state"] -> a  # This affects the layout since it introduces branch
+("new state") -> b  # This affects the layout since it introduces branch
+
+/"curr state"/ -> c
 
 
 # Vertical layout
 a |> b |> c
-"another state" |> a
-"state" |> c
+/"another state"/ |> a
+["state"] |> c
