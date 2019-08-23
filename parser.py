@@ -6,26 +6,6 @@ The DSL is parsed line by line. There are no multi line statements. So, the
 parsing will be easy
 """
 
-rules = {
-    'DEFINITION': [('DECLARATION', ':=', '*')],
-    'DECLARATION': [
-        ('[', 'ALPHA', ']'),
-        ('(', 'ALPHA', ')'),
-        ('/', 'ALPHA', '/'),
-    ],
-    'CHAIN': [
-        ('VAR',),
-        ('VAR', 'LINK', 'CHAIN'),
-    ],
-    'LINK': [
-        ('-', '>'),
-        ('|', '>'),
-        ('<', '-'),
-        ('<', '|'),
-    ],
-    'COMMENT': [('#', '*')],
-}
-
 BRACES_ENDS = {
     '[': ']',
     '(': ')',
@@ -236,7 +216,6 @@ def parse(input):
                 err_col = max(dec_position, chain_position)
                 print(f'SYNTAX_ERROR<Line {line_num+1}, Col {err_col+1}>: {err}')
             else:
-                print('CHAIN', chain)
                 nodes, link_types = chain
 
                 node_vars = []
@@ -246,25 +225,28 @@ def parse(input):
                     if type == 'string':
                         # Create a variable
                         var = str(string_hash(node['value'] + (node['enclosure'] or '')))
-                        var_definitions_map[var] = {
-                            'value': node['value']
-                        }
-                    info = links.get(var, {})
-
-                    # TODO: think about links
-                    info['links'] = {
-                        **info.get('links', {}),
-                        #var: linkn_types
+                        var_definitions_map[var] = node['value']
+                        node_vars.append(f"{node['enclosure']}{var}")
+                    else:
+                        node_vars.append(f"{node['value'][1]}{node['value'][0]}")
+                # Now nodes are ready, create links
+                for (source, dest), link_type in zip(zip(node_vars, node_vars[1:]), link_types):
+                    links[source] = {
+                        **links.get(source, {}),
+                        dest: link_type
                     }
-                    links[node['value']] = info
         else:
             name, val = declaration
 
             present = var_definitions_map.get(name)
             if present is not None:
                 print(f"ERROR<Line {line_num + 1}>: variable '{name}' already defined")
+                return
             else:
                 var_definitions_map[name] = val
+
+    print(var_definitions_map)
+    print(links)
 
 
 if __name__ == '__main__':
