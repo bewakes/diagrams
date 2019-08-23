@@ -58,7 +58,7 @@ def strip_comment(line):
         if x == '"':
             quote_count += 1
         elif x == '#':
-            return line[:len(line) - i - 1]
+            return line[:len(line) - i - 1].rstrip()
     return line
 
 
@@ -72,22 +72,46 @@ def parse_alpha(line, index=0):
     while line[position] in string.ascii_letters:
         position += 1
         if position >= length:
-            return line[index:], position+1, ''
+            return line[index:], position, ''
     return line[index:position], position, ''
+
+
+def parse_enclosed_alpha(line, index=0):
+    line = strip_comment(line)
+    length = len(line)
+    pos = strip_empty(line, index)
+
+    if pos > length:
+        return None, pos, ""
+
+    # Check if enclosing char present
+    if line[pos] in BRACES_ENDS:
+        brace = line[pos]
+    else:
+        return None, pos, "Invalid node: string should be enclosed"
+
+    val, pos, _ = parse_alpha(line, pos + 1)
+    if val is None:
+        return None, pos, "Invalid string"
+
+    pos = strip_empty(line, pos)
+    if pos > length or line[pos] != BRACES_ENDS[brace]:
+        return None, pos, "Invalid enclosure"
+    return (val, brace), pos + 1, ""
 
 
 def parse_string_val(line, index=0):
     line = strip_comment(line)
     pos = strip_empty(line, index)
 
-    match = re.match('^"(.*)"', line[pos:])
+    match = re.match('^"(.*?)"', line[pos:])
     if not match:
         return None, pos, "Invalid string"
     val = match.group(1)
     return val, pos + len(val) + 2, ''
 
 
-def parse_string_val_enclosed(line, index=0):
+def parse_enclosed_string_val(line, index=0):
     line = strip_comment(line)
     length = len(line)
     pos = strip_empty(line, index)
@@ -118,11 +142,7 @@ def parse_declaration(line, index=0):
     if pos >= length:
         return None, pos, 'Empty declaration'
 
-    start_char = line[pos]
-    if start_char not in BRACES_ENDS:
-        return (None, pos, 'Invalid declaration token')
-
-    (parsed, pos, _) = parse_alpha(line, pos+1)
+    (parsed, pos, _) = parse_alpha(line, pos)
     pos = strip_empty(line, pos)
 
     if pos >= length or not parsed:
@@ -130,10 +150,7 @@ def parse_declaration(line, index=0):
 
     variable_name = parsed
 
-    if line[pos] != BRACES_ENDS[start_char]:
-        return (None, pos, 'Invalid/Missing closure for variable declaration')
-
-    pos = strip_empty(line, pos+1)
+    pos = strip_empty(line, pos)
     if not line or line[pos:pos+2] != ':=':
         return (None, pos, 'Variable declaration missing `:=`')
 
@@ -147,7 +164,7 @@ def parse_declaration(line, index=0):
     if line[pos:] != '':
         return None, pos, "Trailing characters after declaration"
 
-    return (variable_name, string_value, start_char), pos, ''
+    return (variable_name, string_value), pos, ''
 
 
 LINKS_LIST = ['->', '<-', '|>', '<|']
@@ -165,7 +182,7 @@ def parse_chain(line, index=0):
     length = len(line)
     while index < length:
         if parse_var:
-            str_val, pos, er = parse_string_val_enclosed(line, index)
+            str_val, pos, er = parse_enclosed_string_val(line, index)
             if str_val is not None:
                 val, enclosure = str_val
                 curr_val['value'] = val
@@ -174,7 +191,7 @@ def parse_chain(line, index=0):
                 index = pos
                 parse_var = False
             else:
-                var_val, pos, er = parse_alpha(line, index)
+                var_val, pos, er = parse_enclosed_alpha(line, index)
                 if var_val:
                     curr_val['value'] = var_val
                     curr_val['type'] = 'variable'
@@ -241,19 +258,13 @@ def parse(input):
                     }
                     links[node['value']] = info
         else:
-            name, val, start = declaration
-            var_definitions_map[name] = {
-                'value': val,
-                'type': start,
-            }
+            name, val = declaration
+
             present = var_definitions_map.get(name)
-            # TODO: fix this
-            # if present is not None:
-            #    print(f"ERROR<Line {line_num + 1}>: variable '{name}' already defined")
-            var_definitions_map[name] = {
-                'value': val,
-                'start': start,
-            }
+            if present is not None:
+                print(f"ERROR<Line {line_num + 1}>: variable '{name}' already defined")
+            else:
+                var_definitions_map[name] = val
 
 
 if __name__ == '__main__':
