@@ -3,6 +3,8 @@ from PIL import ImageDraw, ImageFont, Image
 import shapes
 import utils
 
+RENDERFONT = 'Ubuntu-R'
+
 
 def render(img, obj):
     draw = ImageDraw.Draw(img)
@@ -27,7 +29,32 @@ def render(img, obj):
         [render(img, x) for x in obj.primitives]
 
 
-def render_shapes():
+def render_graph(graph, img_width=500, img_height=500):
+    image_size = (img_width, img_height)
+    img = Image.new('RGB', image_size)
+
+    for node in graph.nodes.values():
+        obj = get_render_shape(node)
+        render(img, obj)
+    img.save('/tmp/text.png')
+
+
+def get_render_shape(node):
+    node_center = (100*node.id+50, 100*node.id+50)
+    padding = 20
+    args = (RENDERFONT, node_center)
+
+    if node.type == '/':
+        return shapes.TextInParallelogram(node.value, *args, -15, padding)
+    elif node.type == '[':
+        return shapes.TextInRectangle(node.value, *args, padding)
+    elif node.type == '(':
+        return shapes.TextInRoundedRectangle(node.value, *args, radius=20, padding=padding)
+    # DEFAULT Rectangle
+    return shapes.TextInRectangle(node.value, *args, padding)
+
+
+def _render_shapes():
     font = 'Ubuntu-R'
     image_size = (500, 500)
     img = Image.new('RGB', image_size)
@@ -58,7 +85,7 @@ def render_shapes():
     img.save('text.png')
 
 
-def render_blocks_and_arrows():
+def _render_blocks_and_arrows():
     font = 'Ubuntu-R'
     image_size = (500, 500)
     img = Image.new('RGB', image_size)
@@ -74,5 +101,12 @@ def render_blocks_and_arrows():
     img.save('text.png')
 
 
+def main():
+    from parser import parse
+    with open('diagram.dsl') as f:
+        graph = parse(f.read())
+        render_graph(graph)
+
+
 if __name__ == '__main__':
-    render_blocks_and_arrows()
+    main()

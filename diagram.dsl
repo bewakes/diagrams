@@ -8,13 +8,14 @@ c := "Transition State"            # Inside Parallelogram
 # Rules
 
 # Horizontal layout
-(a) -> [b] -> (c)
-["next state"] -> (a)  # This affects the layout since it introduces branch
-("new state") -> /b/  # This affects the layout since it introduces branch
+(a) -> [b] -> /c/
+/"next state"/ -> (a)  # This affects the layout since it introduces branch
 
-/"curr state"/ -> /"man"/
-
-
-# Vertical layout
-(a) |> (b) |> [c]
-["another state"] |> ("bibek")
+#("new state") -> /b/  # This affects the layout since it introduces branch
+#
+#/"curr state"/ -> /"man"/
+#
+#
+## Vertical layout
+#(a) -> (b) <- [c]
+#["another state"] -> ("bibek")

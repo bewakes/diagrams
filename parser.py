@@ -1,6 +1,7 @@
 import string
 import re
 from utils import string_hash
+from exceptions import SyntaxError, SemanticError
 """
 The DSL is parsed line by line. There are no multi line statements. So, the
 parsing will be easy
@@ -10,7 +11,36 @@ BRACES_ENDS = {
     '[': ']',
     '(': ')',
     '/': '/',
+    '<': '>',
 }
+
+
+class Node:
+    count = 0
+
+    def __init__(self, varname, value, type):
+        self.id = Node.count
+        Node.count += 1
+        self.varname = varname
+        self.value = value
+        self.type = type
+        self.adjacents = []
+
+    def __str__(self):
+        return f'{self.id}: {self.varname} -> {self.value}, {self.type}'
+
+
+class Graph:
+    def __init__(self, nodes):
+        self.nodes = nodes
+
+    def __str__(self):
+        node_info = 'NODES\n'
+        links_info = ''
+        for id, node in self.nodes.items():
+            node_info += str(node) + '\n'
+            links_info += f'{id} -> {node.adjacents}\n'
+        return f'{node_info}\nLINKS\n{links_info}'
 
 
 def parse_char(char, line, index):
@@ -147,7 +177,7 @@ def parse_declaration(line, index=0):
     return (variable_name, string_value), pos, ''
 
 
-LINKS_LIST = ['->', '<-', '|>', '<|']
+LINKS_LIST = ['->', '<-',]  # '|>', '<|']
 
 
 def parse_chain(line, index=0):
@@ -198,7 +228,7 @@ def parse_chain(line, index=0):
 
 
 def parse(input):
-    """Takes in a string input and returns a graph like result"""
+    """Takes in a string input and returns a graph"""
     var_definitions_map = {}
     links = {
     }
@@ -214,7 +244,7 @@ def parse(input):
             if chain is None:
                 err = dec_err if dec_position > chain_position else chain_err
                 err_col = max(dec_position, chain_position)
-                print(f'SYNTAX_ERROR<Line {line_num+1}, Col {err_col+1}>: {err}')
+                raise SyntaxError(f'SYNTAX_ERROR<Line {line_num+1}, Col {err_col+1}>: {err}')
             else:
                 nodes, link_types = chain
 
@@ -231,24 +261,36 @@ def parse(input):
                         node_vars.append(f"{node['value'][1]}{node['value'][0]}")
                 # Now nodes are ready, create links
                 for (source, dest), link_type in zip(zip(node_vars, node_vars[1:]), link_types):
-                    links[source] = {
-                        **links.get(source, {}),
-                        dest: link_type
-                    }
+                    if link_type == '<-':
+                        source, dest = dest, source
+                    links[source] = [*links.get(source, []), dest]
         else:
             name, val = declaration
 
             present = var_definitions_map.get(name)
             if present is not None:
-                print(f"ERROR<Line {line_num + 1}>: variable '{name}' already defined")
-                return
+                raise SemanticError(f"ERROR<Line {line_num + 1}>: variable '{name}' already defined")
             else:
                 var_definitions_map[name] = val
 
-    print(var_definitions_map)
-    print(links)
+    return to_graph(var_definitions_map, links)
+
+
+def to_graph(vars, links):
+    nodes = {}
+    for source, dests in links.items():
+        type, varname = source[0], source[1:]
+        if source not in nodes:
+            nodes[source] = Node(varname, vars[varname], type)
+        for dest in dests:
+            dtype, dname = dest[0], dest[1:]
+            if dest not in nodes:
+                nodes[dest] = Node(dname, vars[dname], dtype)
+            nodes[source].adjacents.append(nodes[dest].id)
+    return Graph(nodes)
 
 
 if __name__ == '__main__':
     with open('diagram.dsl') as f:
-        parse(f.read())
+        graph = parse(f.read())
+        print(graph)
