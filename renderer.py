@@ -33,9 +33,21 @@ def render_graph(graph, img_width=500, img_height=500):
     image_size = (img_width, img_height)
     img = Image.new('RGB', image_size)
 
+    rendered_nodes = {}
+
     for node in graph.nodes.values():
         obj = get_render_shape(node)
-        render(img, obj)
+        if node.id not in rendered_nodes:
+            render(img, obj)
+        # Render links
+        for adj in node.adjacents:
+            if adj not in rendered_nodes:
+                adjnode = graph.get_node(adj)
+                adjobj = get_render_shape(adjnode)
+                render(img, adjobj)
+            # Create link
+            arrow = shapes.Arrow(obj.center, adjobj.center)
+            render(img, arrow)
     img.save('/tmp/text.png')
 
 

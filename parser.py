@@ -2,6 +2,8 @@ import string
 import re
 from utils import string_hash
 from exceptions import SyntaxError, SemanticError
+
+from collections import OrderedDict
 """
 The DSL is parsed line by line. There are no multi line statements. So, the
 parsing will be easy
@@ -33,6 +35,7 @@ class Node:
 class Graph:
     def __init__(self, nodes):
         self.nodes = nodes
+        self.id_nodes = {x.id: x for x in nodes.values()}
 
     def __str__(self):
         node_info = 'NODES\n'
@@ -41,6 +44,9 @@ class Graph:
             node_info += str(node) + '\n'
             links_info += f'{id} -> {node.adjacents}\n'
         return f'{node_info}\nLINKS\n{links_info}'
+
+    def get_node(self, node_id):
+        return self.id_nodes[node_id]
 
 
 def parse_char(char, line, index):
@@ -177,7 +183,7 @@ def parse_declaration(line, index=0):
     return (variable_name, string_value), pos, ''
 
 
-LINKS_LIST = ['->', '<-',]  # '|>', '<|']
+LINKS_LIST = ['->', '<-', ]  # '|>', '<|']
 
 
 def parse_chain(line, index=0):
@@ -229,9 +235,8 @@ def parse_chain(line, index=0):
 
 def parse(input):
     """Takes in a string input and returns a graph"""
-    var_definitions_map = {}
-    links = {
-    }
+    var_definitions_map = OrderedDict()
+    links = OrderedDict()
 
     lines = input.split('\n')
     for line_num, line in enumerate(lines):
