@@ -95,10 +95,17 @@ def intersection_of_lines(line1, line2):
     tp1l2 = add_points(p1l2, np1l1)
     tp2l2 = add_points(p2l2, np1l1)
 
+    print('translated')
+    print(tp2l1)
+    print(tp1l2)
+    print(tp2l2)
+
     # Check if endpoints touch the line
     if point_on_line(tp1l2, ((0, 0), tp2l1)):
+        print('endpoints touch 1')
         return p1l2
     if point_on_line(tp2l2, ((0, 0), tp2l1)):
+        print('endpoints touch 2')
         return p2l2
 
     # Eqn of translated line1 is p2.y*x - p2.x*y = 0 where p2 is translated second point
@@ -112,8 +119,8 @@ def intersection_of_lines(line1, line2):
 
     dy_l2 = tp2l2[1] - tp1l2[1]
     dx_l2 = tp2l2[0] - tp1l2[0]
-    dy_x1 = dy_l2 * tp2l1[0]
-    dx_y1 = dx_l2 * tp2l1[1]
+    dy_x1 = dy_l2 * tp1l2[0]
+    dx_y1 = dx_l2 * tp1l2[1]
 
     # Check conditions when line1 is vertical or horizontal
     if tp2l1[0] == 0:  # means vertical
@@ -136,7 +143,7 @@ def intersection_of_lines(line1, line2):
     # Final Case when first line is neither horizontal nor vertical
     # Find linear eqn parameters for first line and second line and solve by cramers rule
     params1 = (tp2l1[1], - tp2l1[0], 0)
-    params2 = (dy_l2, -dx_l2, dy_x1, dx_y1)
+    params2 = (dy_l2, -dx_l2, dy_x1 - dx_y1)
     x, y = cramers_rule(params1, params2)
 
     return add_points((x, y), p1l1)
