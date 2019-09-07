@@ -32,19 +32,19 @@ def render_object(img, obj):
 class GraphRenderer:
     def __init__(self, graph, img_width, img_height):
         self.graph = graph
-        self.rendered_nodes = set()
+        self.rendered_nodes = {}
         self.rendered_links = {}
         self.width = img_width
         self.height = img_height
         self.img = None
 
     def render_chain(self, node):
-        obj = get_render_shape(node)
-        obj.center = (100, 50 + 100*len(self.rendered_nodes))
-
         if node.id not in self.rendered_nodes:
+            obj = get_render_shape(node)
+            obj.center = (100, 50 + 100*len(self.rendered_nodes))
             render_object(self.img, obj)
-            self.rendered_nodes.add(node.id)
+            self.rendered_nodes[node.id] = obj
+        obj = self.rendered_nodes[node.id]
 
         # Render linked nodes and links
         for adj in node.adjacents:
@@ -53,10 +53,10 @@ class GraphRenderer:
                 adjobj = get_render_shape(adjnode)
                 adjobj.center = (100, 50 + 100*len(self.rendered_nodes))
                 render_object(self.img, adjobj)
-                self.rendered_nodes.add(adj)
+                self.rendered_nodes[adj] = adjobj
+            adjobj = self.rendered_nodes[adj]
 
             # Create link
-            print('adj center', adjobj.center, 'self center', obj.center)
             arr_start = obj.intersection_from(*adjobj.center)
             arr_end = adjobj.intersection_from(*obj.center)
             arrow = shapes.Arrow(arr_start, arr_end)

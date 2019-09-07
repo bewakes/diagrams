@@ -292,12 +292,9 @@ class TextInRoundedRectangle(TextInRectangle):
 
 
 def intersection_with_polygon(points, line):
-    order = ['top', 'right', 'bottom', 'left']
-    for i, side in enumerate(zip(points, points[1:] + [points[0]])):
-        print(line, side)
+    for side in zip(points, points[1:] + [points[0]]):
         intersection = intersection_of_lines(line, side)
         if intersection:
-            print('intersected with ', order[i], side, 'at', intersection)
             return intersection
     return None
 

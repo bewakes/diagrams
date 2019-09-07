@@ -117,7 +117,6 @@ def intersection_of_lines(line1, line2):
 
     # Check conditions when line1 is vertical or horizontal
     if tp2l1[0] == 0:  # means vertical
-        print('vertical')
         if dx_l2 == 0:  # means line is also vertical and there are many intersection points
             # Return the line's initial point
             return p1l2 if abs(tp1l2[1]) < abs(tp2l1[1]) else p2l2
