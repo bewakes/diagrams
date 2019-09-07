@@ -14,6 +14,7 @@ def test_cramers_rule():
 
 
 def test_intersection_of_lines():
+    # NOTE: this is not complete
     line1 = ((50, 100), (100, 25))
     line2 = ((75, 50), (100, 50))
     expected = (83.33, 50)

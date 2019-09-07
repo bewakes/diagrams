@@ -6,7 +6,7 @@ import utils
 RENDERFONT = 'Ubuntu-R'
 
 
-def render(img, obj):
+def render_object(img, obj):
     draw = ImageDraw.Draw(img)
 
     if obj.type == 'rectangle':
@@ -26,33 +26,61 @@ def render(img, obj):
         draw.arc((x0, y0, x1, y1), start, end)
 
     else:
-        [render(img, x) for x in obj.primitives]
+        [render_object(img, x) for x in obj.primitives]
 
 
-def render_graph(graph, img_width=500, img_height=500):
-    image_size = (img_width, img_height)
-    img = Image.new('RGB', image_size)
+class GraphRenderer:
+    def __init__(self, graph, img_width, img_height):
+        self.graph = graph
+        self.rendered_nodes = set()
+        self.rendered_links = {}
+        self.width = img_width
+        self.height = img_height
+        self.img = None
 
-    rendered_nodes = {}
-
-    for node in graph.nodes.values():
+    def render_chain(self, node):
         obj = get_render_shape(node)
-        if node.id not in rendered_nodes:
-            render(img, obj)
-        # Render links
+        obj.center = (100, 50 + 100*len(self.rendered_nodes))
+
+        if node.id not in self.rendered_nodes:
+            render_object(self.img, obj)
+            self.rendered_nodes.add(node.id)
+
+        # Render linked nodes and links
         for adj in node.adjacents:
-            if adj not in rendered_nodes:
-                adjnode = graph.get_node(adj)
+            if adj not in self.rendered_nodes:
+                adjnode = self.graph.get_node(adj)
                 adjobj = get_render_shape(adjnode)
-                render(img, adjobj)
+                adjobj.center = (100, 50 + 100*len(self.rendered_nodes))
+                render_object(self.img, adjobj)
+                self.rendered_nodes.add(adj)
+
             # Create link
-            arrow = shapes.Arrow(obj.center, adjobj.center)
-            render(img, arrow)
-    img.save('/tmp/text.png')
+            print('adj center', adjobj.center, 'self center', obj.center)
+            arr_start = obj.intersection_from(*adjobj.center)
+            arr_end = adjobj.intersection_from(*obj.center)
+            arrow = shapes.Arrow(arr_start, arr_end)
+            render_object(self.img, arrow)
+
+            # Update rendered links
+            self.rendered_links[node.id] = {
+                * self.rendered_links.get(node.id, set()),
+                adj
+            }
+
+    def render(self):
+        self.img = Image.new('RGB', (self.width, self.height))
+
+        for node in self.graph.nodes.values():
+            self.render_chain(node)
+
+    def save_to(self, filename):
+        self.img.save(filename)
+        print(f'IMAGE SAVED TO {filename}')
 
 
 def get_render_shape(node):
-    node_center = (100*node.id+50, 100*node.id+50)
+    node_center = (0, 0)
     padding = 20
     args = (RENDERFONT, node_center)
 
@@ -66,58 +94,17 @@ def get_render_shape(node):
     return shapes.TextInRectangle(node.value, *args, padding)
 
 
-def _render_shapes():
-    font = 'Ubuntu-R'
-    image_size = (500, 500)
-    img = Image.new('RGB', image_size)
-
-    rectangle = shapes.Rectangle((0, 0), (100, 100))
-    text = shapes.Text('bibek', (50, 50), font)
-    arc = shapes.Arc((300, 20), 50, 0, -3.14/3)
-
-    arrow = shapes.Arrow((400, 400), (450, 150))
-
-    textrect = shapes.TextInRectangle('Pandey', font, (100, 100), padding=20)
-    textrrect = shapes.TextInRoundedRectangle('round', font, (200, 380), radius=20, padding=20)
-    roundedrect = shapes.RoundedRectangle((150, 150), (300, 340), 10)
-
-    parallelogram = shapes.ParalleloGram((40, 40), (100, 100), slide=-10)
-    textinparall = shapes.TextInParallelogram('textpara', font, (300, 400), -15, padding=10)
-
-    render(img, rectangle)
-    render(img, text)
-    render(img, arc)
-    render(img, arrow)
-    render(img, textrect)
-    render(img, textrrect)
-    render(img, roundedrect)
-    render(img, parallelogram)
-    render(img, textinparall)
-
-    img.save('text.png')
-
-
-def _render_blocks_and_arrows():
-    font = 'Ubuntu-R'
-    image_size = (500, 500)
-    img = Image.new('RGB', image_size)
-
-    par_text = shapes.TextInParallelogram('Side Project', font, (100, 100), 15, padding=10)
-    rect_text = shapes.TextInRectangle('Is Fun', font, (300, 100), padding=10)
-    round_text = shapes.TextInRoundedRectangle('Life', font, (450, 200), 7)
-
-    arrow1 = shapes.Arrow(par_text.center, rect_text.center)
-    arrow2 = shapes.Arrow(round_text.center, rect_text.center)
-
-    [render(img, x) for x in [par_text, rect_text, round_text, arrow1, arrow2]]
-    img.save('text.png')
-
-
 def main():
     from parser import parse
     with open('diagram.dsl') as f:
         graph = parse(f.read())
-        render_graph(graph)
+        w = 500
+        h = 500
+        filename = '/tmp/text.png'
+
+        renderer = GraphRenderer(graph, w, h)
+        renderer.render()
+        renderer.save_to(filename)
 
 
 if __name__ == '__main__':

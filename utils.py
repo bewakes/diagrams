@@ -95,22 +95,15 @@ def intersection_of_lines(line1, line2):
     tp1l2 = add_points(p1l2, np1l1)
     tp2l2 = add_points(p2l2, np1l1)
 
-    print('translated')
-    print(tp2l1)
-    print(tp1l2)
-    print(tp2l2)
-
     # Check if endpoints touch the line
     if point_on_line(tp1l2, ((0, 0), tp2l1)):
-        print('endpoints touch 1')
         return p1l2
     if point_on_line(tp2l2, ((0, 0), tp2l1)):
-        print('endpoints touch 2')
         return p2l2
 
     # Eqn of translated line1 is p2.y*x - p2.x*y = 0 where p2 is translated second point
     def l1_eqn(x, y):
-        return  tp2l1[1] * x - tp2l1[0] * y
+        return tp2l1[1] * x - tp2l1[0] * y
 
     # Check if both points of line2 line on same side of line1 (both translated points)
     # If so, there is no intersection
@@ -124,20 +117,27 @@ def intersection_of_lines(line1, line2):
 
     # Check conditions when line1 is vertical or horizontal
     if tp2l1[0] == 0:  # means vertical
+        print('vertical')
         if dx_l2 == 0:  # means line is also vertical and there are many intersection points
             # Return the line's initial point
             return p1l2 if abs(tp1l2[1]) < abs(tp2l1[1]) else p2l2
 
         # return intersection when x is zero
         y = (dx_y1 - dy_x1) / dx_l2
+
+        if y * (y - tp2l1[1]) > 0:
+            return None
         return add_points((0, y), p1l1)
 
     if tp2l1[1] == 0:  # means horizontal
         if dy_l2 == 0:  # means line is also vertical and there are many intersection points
             # Return the line's initial point
             return p1l2 if abs(tp1l2[0]) < (tp2l1[0]) else p2l2
+
         # return intersection when y is zero
         x = (dy_x1 - dx_y1) / dy_l2
+        if x * (x - tp2l1[0]) > 0:
+            return None
         return add_points((x, 0), p1l1)
 
     # Final Case when first line is neither horizontal nor vertical
@@ -145,6 +145,10 @@ def intersection_of_lines(line1, line2):
     params1 = (tp2l1[1], - tp2l1[0], 0)
     params2 = (dy_l2, -dx_l2, dy_x1 - dx_y1)
     x, y = cramers_rule(params1, params2)
+
+    # BOUNDING BOX CHECK
+    if x * (x - tp2l1[0]) > 0 or y * (y - tp2l1[1]) > 0:
+        return None
 
     return add_points((x, y), p1l1)
 

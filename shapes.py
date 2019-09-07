@@ -2,7 +2,11 @@ import math
 
 from PIL import ImageFont
 
-from utils import add_points, scale_point, negate, rotate_point, distance
+from utils import (
+    add_points, scale_point,
+    negate, rotate_point, distance,
+    intersection_of_lines,
+)
 
 
 class Line:
@@ -249,6 +253,20 @@ class TextInRectangle:
         ]
         return self._primitives
 
+    def intersection_from(self, x, y):
+        """Calculate border interesection point from given point to center"""
+        centers_line = ((x, y), self.center)
+        [_, rect] = self.primitives
+        (a, b) = rect.top_left
+        (c, d) = rect.bottom_right
+        # Check with top line
+        intersection = intersection_with_polygon(
+            [(a, b), (c, b), (c, d), (a, d)],
+            centers_line
+        )
+        # If not intersections, return center
+        return intersection or self.center
+
 
 class TextInRoundedRectangle(TextInRectangle):
     def __init__(self, text, font, center, padding=0, radius=5, wrap=None):
@@ -271,6 +289,17 @@ class TextInRoundedRectangle(TextInRectangle):
             for x in super().primitives
         ]
         return self._primitives
+
+
+def intersection_with_polygon(points, line):
+    order = ['top', 'right', 'bottom', 'left']
+    for i, side in enumerate(zip(points, points[1:] + [points[0]])):
+        print(line, side)
+        intersection = intersection_of_lines(line, side)
+        if intersection:
+            print('intersected with ', order[i], side, 'at', intersection)
+            return intersection
+    return None
 
 
 class TextInParallelogram:
