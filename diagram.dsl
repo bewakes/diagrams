@@ -1,19 +1,13 @@
 # DEFINITIONS
-
-a := "Off State"                   # Inside rectangle
-b := "On State"                    # Inside rounded rectangle
-c := "Transition State"            # Inside Parallelogram
+a := "Off State"                   # Variable 'a' definition
+b := "On State"                    # Variable 'b' definition
+c := "Transition State"            # Variable 'c' definition
 
 
 # Rules
 
-# Horizontal layout
-#(a) -> [b] -> /c/
-["next state"] -> [c] -> ["pandey"]  # This affects the layout since it introduces branch
-["pandey"] -> ["man"]
+(a) -> [b] -> (c)
 
-#("new state") -> /b/  # This affects the layout since it introduces branch
-#
 #/"curr state"/ -> /"man"/
 #
 #
