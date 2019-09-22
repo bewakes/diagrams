@@ -1,4 +1,4 @@
-from graph import Graph, Node
+from diagrams.graph import Graph, Node
 
 from typing import List
 

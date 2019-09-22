@@ -1,7 +1,7 @@
 from PIL import ImageDraw, ImageFont, Image
 
 import shapes
-import utils.geometry
+from utils.geometry import add_points, rad_to_deg
 from graph import Graph
 
 RENDERFONT = 'Ubuntu-R'
@@ -20,10 +20,10 @@ def render_object(img, obj):
         draw.line(obj.start + obj.end)
 
     elif obj.type == 'arc':
-        x0, y0 = utils.add_points(obj.center, (-obj.radius, -obj.radius))
-        x1, y1 = utils.add_points(obj.center, (obj.radius, obj.radius))
-        start = utils.rad_to_deg(-obj.end)
-        end = utils.rad_to_deg(-obj.start)
+        x0, y0 = add_points(obj.center, (-obj.radius, -obj.radius))
+        x1, y1 = add_points(obj.center, (obj.radius, obj.radius))
+        start = rad_to_deg(-obj.end)
+        end = rad_to_deg(-obj.start)
         draw.arc((x0, y0, x1, y1), start, end)
 
     else:
