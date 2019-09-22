@@ -10,6 +10,7 @@ c := "Transition State"            # Inside Parallelogram
 # Horizontal layout
 #(a) -> [b] -> /c/
 ["next state"] -> [c] -> ["pandey"]  # This affects the layout since it introduces branch
+["pandey"] -> ["man"]
 
 #("new state") -> /b/  # This affects the layout since it introduces branch
 #

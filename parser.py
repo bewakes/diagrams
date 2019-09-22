@@ -1,6 +1,8 @@
 import string
 import re
 
+from typing import cast, List
+
 from utils.strings import string_hash
 from exceptions import SyntaxError, SemanticError
 from graph import Graph, Node
@@ -262,7 +264,9 @@ def to_graph(vars: dict, links: dict) -> Graph:
             if dest not in nodes:
                 nodes[dest] = Node(dname, vars[dname], dtype)
             nodes[source].adjacents.append(nodes[dest].id)
-    return Graph(nodes)
+
+    casted_nodes = cast(List[Node], nodes.values())
+    return Graph(casted_nodes)
 
 
 if __name__ == '__main__':
