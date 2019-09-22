@@ -1,7 +1,9 @@
 import string
 import re
-from utils import string_hash
+
+from utils.strings import string_hash
 from exceptions import SyntaxError, SemanticError
+from graph import Graph, Node
 
 from collections import OrderedDict
 """
@@ -17,45 +19,13 @@ BRACES_ENDS = {
 }
 
 
-class Node:
-    count = 0
-
-    def __init__(self, varname, value, type):
-        self.id = Node.count
-        Node.count += 1
-        self.varname = varname
-        self.value = value
-        self.type = type
-        self.adjacents = []
-
-    def __str__(self):
-        return f'{self.id}: {self.varname} -> {self.value}, {self.type}'
-
-
-class Graph:
-    def __init__(self, nodes):
-        self.nodes = nodes
-        self.id_nodes = {x.id: x for x in nodes.values()}
-
-    def __str__(self):
-        node_info = 'NODES\n'
-        links_info = ''
-        for id, node in self.nodes.items():
-            node_info += str(node) + '\n'
-            links_info += f'{id} -> {node.adjacents}\n'
-        return f'{node_info}\nLINKS\n{links_info}'
-
-    def get_node(self, node_id):
-        return self.id_nodes[node_id]
-
-
-def parse_char(char, line, index):
+def parse_char(char: str, line: str, index: int):
     pos = strip_empty(line, index)
     if pos >= len(line) or line[pos] != char:
         return None, pos, ''
 
 
-def strip_empty(line, index=0):
+def strip_empty(line: str, index: int = 0):
     length = len(line)
 
     if index >= length:
@@ -68,7 +38,7 @@ def strip_empty(line, index=0):
     return index
 
 
-def strip_comment(line):
+def strip_comment(line: str):
     quote_count = 0
     for i, x in enumerate(line[::-1]):
         if x == '"':
@@ -78,7 +48,7 @@ def strip_comment(line):
     return line
 
 
-def parse_alpha(line, index=0):
+def parse_alpha(line: str, index: int = 0):
     index = strip_empty(line, index)
     length = len(line)
     if index >= length:
@@ -92,7 +62,7 @@ def parse_alpha(line, index=0):
     return line[index:position], position, ''
 
 
-def parse_enclosed_alpha(line, index=0):
+def parse_enclosed_alpha(line: str, index: int = 0):
     line = strip_comment(line)
     length = len(line)
     pos = strip_empty(line, index)
@@ -116,7 +86,7 @@ def parse_enclosed_alpha(line, index=0):
     return (val, brace), pos + 1, ""
 
 
-def parse_string_val(line, index=0):
+def parse_string_val(line: str, index: int = 0):
     line = strip_comment(line)
     pos = strip_empty(line, index)
 
@@ -127,7 +97,7 @@ def parse_string_val(line, index=0):
     return val, pos + len(val) + 2, ''
 
 
-def parse_enclosed_string_val(line, index=0):
+def parse_enclosed_string_val(line: str, index: int = 0):
     line = strip_comment(line)
     length = len(line)
     pos = strip_empty(line, index)
@@ -151,7 +121,7 @@ def parse_enclosed_string_val(line, index=0):
     return (val, brace), pos + 1, ""
 
 
-def parse_declaration(line, index=0):
+def parse_declaration(line: str, index: int = 0):
     line = strip_comment(line)
     length = len(line)
     pos = strip_empty(line, index)
@@ -186,7 +156,7 @@ def parse_declaration(line, index=0):
 LINKS_LIST = ['->', '<-', ]  # '|>', '<|']
 
 
-def parse_chain(line, index=0):
+def parse_chain(line: str, index: int = 0):
     vars = []
     links = []
 
@@ -233,7 +203,7 @@ def parse_chain(line, index=0):
     return (vars, links), index, ''
 
 
-def parse(input):
+def parse(input: str):
     """Takes in a string input and returns a graph"""
     var_definitions_map = OrderedDict()
     links = OrderedDict()
@@ -281,8 +251,8 @@ def parse(input):
     return to_graph(var_definitions_map, links)
 
 
-def to_graph(vars, links):
-    nodes = {}
+def to_graph(vars: dict, links: dict) -> Graph:
+    nodes: dict = {}
     for source, dests in links.items():
         type, varname = source[0], source[1:]
         if source not in nodes:

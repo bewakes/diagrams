@@ -2,7 +2,7 @@ import math
 
 from PIL import ImageFont
 
-from utils import (
+from utils.geometry import (
     add_points, scale_point,
     negate, rotate_point, distance,
     intersection_of_lines,

@@ -1,7 +1,8 @@
 from PIL import ImageDraw, ImageFont, Image
 
 import shapes
-import utils
+import utils.geometry
+from graph import Graph
 
 RENDERFONT = 'Ubuntu-R'
 
@@ -30,10 +31,10 @@ def render_object(img, obj):
 
 
 class GraphRenderer:
-    def __init__(self, graph, img_width, img_height):
+    def __init__(self, graph: Graph, img_width: int, img_height: int):
         self.graph = graph
-        self.rendered_nodes = {}
-        self.rendered_links = {}
+        self.rendered_nodes: dict = {}
+        self.rendered_links: dict = {}
         self.width = img_width
         self.height = img_height
         self.img = None
