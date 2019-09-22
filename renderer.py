@@ -72,7 +72,7 @@ class GraphRenderer:
     def render(self):
         self.img = Image.new('RGB', (self.width, self.height))
 
-        for node in self.graph.nodes.values():
+        for node in self.graph.nodes:
             self.render_chain(node)
 
     def save_to(self, filename):

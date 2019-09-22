@@ -1,7 +1,7 @@
-from diagrams.utils.geometry import intersection_of_lines, cramers_rule
-from diagrams.graph import Graph, Node
+from utils.geometry import intersection_of_lines, cramers_rule
+from graph import Graph, Node
 
-from diagrams.utils.graph import get_node_longest_chain
+from utils.graph import get_node_longest_chain
 
 
 def test_cramers_rule():
